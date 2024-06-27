@@ -1,0 +1,10 @@
+{
+    "name": "cassette",
+    "version": "1.0.0",
+    "description": "Cassette is a simple to host web session recorder and player.",
+    "main": "index.js",
+    "scripts": {"start": "node index.js"},
+    "dependencies": {"express": "^4.17.1", "rrweb": "^1.0.0"},
+    "author": "Gabby Boy",
+    "license": "MIT",
+}

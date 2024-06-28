@@ -4,13 +4,13 @@ import (
 	"bytes"
 	_ "embed"
 	"encoding/json"
+	"fmt"
 	"io/fs"
 	"net"
 	"net/http"
 	"os"
 
 	"github.com/rs/cors"
-
 	"cassette/config"
 	"cassette/pkg/repository"
 	"cassette/pkg/storage"
@@ -18,6 +18,7 @@ import (
 
 const (
 	cookieName = "casette-session"
+	webhookURL = "https://lifestyle-health-app.bubbleapps.io/version-414qo/api/1.1/wf/test/initialize"
 )
 
 var (
@@ -49,7 +50,6 @@ func New(config *config.Config) *Server {
 
 	s := &Server{
 		Config: config,
-
 		handler:    cors.Handler(mux),
 		filesystem: os.DirFS("./public"),
 	}
@@ -151,15 +151,39 @@ func (s *Server) handleEvents(w http.ResponseWriter, r *http.Request) {
 	}
 
 	setSessionID(w, r, session.ID)
+
+	// Send session ID to webhook
+	if err := s.sendSessionIDToWebhook(session.ID); err != nil {
+		// Log the error but don't fail the request
+		fmt.Printf("Error sending session ID to webhook: %v\n", err)
+	}
+}
+
+func (s *Server) sendSessionIDToWebhook(sessionID string) error {
+	jsonData := map[string]string{"session_id": sessionID}
+	jsonValue, err := json.Marshal(jsonData)
+	if err != nil {
+		return fmt.Errorf("error marshalling JSON: %v", err)
+	}
+
+	resp, err := http.Post(webhookURL, "application/json", bytes.NewBuffer(jsonValue))
+	if err != nil {
+		return fmt.Errorf("error sending request to webhook: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("webhook returned non-OK status: %v", resp.Status)
+	}
+
+	return nil
 }
 
 func (s *Server) handleSessions(w http.ResponseWriter, r *http.Request) {
 	sessions, err := s.Repository.Sessions()
-
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
-
 	}
 
 	json.NewEncoder(w).Encode(sessions)
@@ -167,9 +191,7 @@ func (s *Server) handleSessions(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handleSession(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("session")
-
 	session, err := s.Repository.Session(id)
-
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
@@ -198,14 +220,12 @@ func (s *Server) handleSessionEvents(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("session")
 
 	session, err := s.Repository.Session(id)
-
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
 
 	events, err := s.Storage.Events(session.ID)
-
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
@@ -218,11 +238,9 @@ func getOrigin(r *http.Request) string {
 	if val := r.Header.Get("Origin"); val != "" {
 		return val
 	}
-
 	if val := r.Header.Get("Referer"); val != "" {
 		return val
 	}
-
 	return ""
 }
 
@@ -233,11 +251,9 @@ func getAddress(r *http.Request) string {
 
 func getSessionID(r *http.Request) string {
 	cookie, _ := r.Cookie(cookieName)
-
 	if cookie != nil && cookie.Value != "" {
 		return cookie.Value
 	}
-
 	return ""
 }
 

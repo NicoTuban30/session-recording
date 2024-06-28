@@ -30,7 +30,7 @@ COPY . .
 RUN CGO_ENABLED=1 go build -o server cmd/server/main.go
 
 
-## Deploy
+## Deployss
 FROM alpine
 
 RUN apk add --no-cache tini ca-certificates

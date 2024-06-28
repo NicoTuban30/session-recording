@@ -18,7 +18,7 @@ import (
 
 const (
 	cookieName = "casette-session"
-	webhookURL = "https://lifestyle-health-app.bubbleapps.io/version-414qo/api/1.1/wf/test/initialize"
+	webhookURL = "https://lifestyle-health-app.bubbleapps.io/version-414qo/api/1.1/wf/test/"
 )
 
 var (

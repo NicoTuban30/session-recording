@@ -15,7 +15,8 @@
 
 		UserAgent string `json:"userAgent"`
 
-		UserId string `json:"userId"`
+		UserEmail string `json:"userEmail"`
+		QaId string `json:"qaId"`
 	}
 
 	type Repository interface {
@@ -32,5 +33,7 @@
 
 		UserAgent string
 
-		UserId string
+		UserEmail string
+		QaId string
+
 	}

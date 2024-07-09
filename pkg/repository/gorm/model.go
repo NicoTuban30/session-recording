@@ -18,7 +18,9 @@ type Session struct {
 
 	UserAgent string
 	
-	UserId string
+	UserEmail string
+	QaId string
+
 }
 
 func (s *Session) BeforeCreate(tx *gorm.DB) (err error) {

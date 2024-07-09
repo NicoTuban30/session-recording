@@ -1,6 +1,8 @@
 let events = [];
 let eventsURL = new URL('/events', document.currentScript.src).href;
-let userId = getCurrentUserId();
+let userEmail = getCurrentUserEmail();
+let qaId = getCurrentQAUniqueId();
+
 
 
 rrweb.record({
@@ -9,15 +11,18 @@ rrweb.record({
   },
 });
 
-function getCurrentUserId() {
-  const userId = localStorage.getItem('userId');
-  
-  return userId;
+function getCurrentUserEmail() {
+  const userEmail = localStorage.getItem('userEmail');
+  return userEmail;
+}
 
+function getCurrentQAUniqueId() {
+  const qaId = localStorage.getItem('qaId');
+  return qaId;
 }
 
 function save() {
-  const body = JSON.stringify({ events, userId });
+  const body = JSON.stringify({ events, userEmail, qaId });
   events = [];
 
   fetch(eventsURL, {

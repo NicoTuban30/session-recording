@@ -18,7 +18,7 @@ import (
 
 const (
 	cookieName = "casette-session"
-	webhookURL = "https://lifestyle-health-app.bubbleapps.io/version-21674/api/1.1/wf/video-store/initialize"
+	webhookURL = "https://mentisnativo.bubbleapps.io/version-test/api/1.1/wf/session-data/initialize"
 )
 
 var (
@@ -115,7 +115,8 @@ func (s *Server) handleScript(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleEvents(w http.ResponseWriter, r *http.Request) {
 	var body struct {
 		Events []storage.Event `json:"events"`
-		UserId string          `json:"userId"`
+		UserEmail string          `json:"userEmail"`
+		QaId string            `json:"qaId"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
@@ -136,7 +137,8 @@ func (s *Server) handleEvents(w http.ResponseWriter, r *http.Request) {
 			Address: getAddress(r),
 
 			UserAgent: r.UserAgent(),
-			UserId:    body.UserId,
+			UserEmail:    body.UserEmail,
+			QaId:      body.QaId,
 		}
 
 		session, err = s.Repository.CreateSession(info)

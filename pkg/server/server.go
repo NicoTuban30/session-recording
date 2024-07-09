@@ -18,7 +18,7 @@ import (
 
 const (
 	cookieName = "casette-session"
-	webhookURL = "https://lifestyle-health-app.bubbleapps.io/version-21674/api/1.1/wf/session/initialize"
+	webhookURL = "https://lifestyle-health-app.bubbleapps.io/version-21674/api/1.1/wf/video-store/initialize"
 )
 
 var (
@@ -156,6 +156,7 @@ func (s *Server) handleEvents(w http.ResponseWriter, r *http.Request) {
 
 	
 	if err := s.sendSessionIDToWebhook(session.ID); err != nil {
+		// Log the error but don't fail the request
 		fmt.Printf("Error sending session ID to webhook: %v\n", err)
 	}
 }

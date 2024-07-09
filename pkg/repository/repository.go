@@ -1,32 +1,36 @@
-package repository
+	package repository
 
-import (
-	"time"
-)
+	import (
+		"time"
+	)
 
-type Session struct {
-	ID string `json:"id"`
+	type Session struct {
+		ID string `json:"id"`
 
-	Created time.Time `json:"created"`
-	Updated time.Time `json:"updated"`
+		Created time.Time `json:"created"`
+		Updated time.Time `json:"updated"`
 
-	Origin  string `json:"origin"`
-	Address string `json:"address"`
+		Origin  string `json:"origin"`
+		Address string `json:"address"`
 
-	UserAgent string `json:"userAgent"`
-}
+		UserAgent string `json:"userAgent"`
 
-type Repository interface {
-	Sessions() ([]Session, error)
-	Session(id string) (*Session, error)
+		UserId string `json:"userId"`
+	}
 
-	CreateSession(info *SessionInfo) (*Session, error)
-	DeleteSession(id string) error
-}
+	type Repository interface {
+		Sessions() ([]Session, error)
+		Session(id string) (*Session, error)
 
-type SessionInfo struct {
-	Origin  string
-	Address string
+		CreateSession(info *SessionInfo) (*Session, error)
+		DeleteSession(id string) error
+	}
 
-	UserAgent string
-}
+	type SessionInfo struct {
+		Origin  string
+		Address string
+
+		UserAgent string
+
+		UserId string
+	}

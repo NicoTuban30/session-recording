@@ -67,6 +67,7 @@ func (r *Repository) CreateSession(info *repository.SessionInfo) (*repository.Se
 	session := Session{
 		Origin:    info.Origin,
 		UserAgent: info.UserAgent,
+		UserId: info.UserId,
 	}
 
 	if tx := r.db.Create(&session); tx.Error != nil {
@@ -106,5 +107,7 @@ func convertSession(session Session) *repository.Session {
 		Address: session.Address,
 
 		UserAgent: session.UserAgent,
+
+		UserId: session.UserId,
 	}
 }

@@ -7,8 +7,8 @@ export default function Header() {
       <div className="mx-auto flex max-w-7xl items-center justify-between py-4">
         <Link to="/">
           <div className="flex items-center gap-4">
-          <img src='ui\src\assets\mentis-logo.png' className="h-10 w-10" />
-            <span className="text-2xl font-bold text-emerald-600">Mentis</span>
+          <img src='//bc5d36ae6bccef65f76383c1dc74f42c.cdn.bubble.io/f1713891835227x483377400251882240/Mentis%20Technologies%20vertical.png' className="h-10 w-10" />
+            <span className="text-2xl font-bold text-emerald-600">MENTIS</span>
           </div>
         </Link>
         <Link to="/help">

@@ -18,7 +18,7 @@ import (
 
 const (
 	cookieName = "casette-session"
-	webhookURL = "https://lifestyle-health-app.bubbleapps.io/version-414qo/api/1.1/wf/test/"
+	webhookURL = "https://lifestyle-health-app.bubbleapps.io/version-21674/api/1.1/wf/session/initialize"
 )
 
 var (
@@ -115,6 +115,7 @@ func (s *Server) handleScript(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleEvents(w http.ResponseWriter, r *http.Request) {
 	var body struct {
 		Events []storage.Event `json:"events"`
+		UserId string          `json:"userId"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
@@ -135,6 +136,7 @@ func (s *Server) handleEvents(w http.ResponseWriter, r *http.Request) {
 			Address: getAddress(r),
 
 			UserAgent: r.UserAgent(),
+			UserId:    body.UserId,
 		}
 
 		session, err = s.Repository.CreateSession(info)
@@ -152,9 +154,8 @@ func (s *Server) handleEvents(w http.ResponseWriter, r *http.Request) {
 
 	setSessionID(w, r, session.ID)
 
-	// Send session ID to webhook
+	
 	if err := s.sendSessionIDToWebhook(session.ID); err != nil {
-		// Log the error but don't fail the request
 		fmt.Printf("Error sending session ID to webhook: %v\n", err)
 	}
 }
@@ -268,3 +269,4 @@ func setSessionID(w http.ResponseWriter, r *http.Request, id string) {
 		HttpOnly: true,
 	})
 }
+

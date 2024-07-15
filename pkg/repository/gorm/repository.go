@@ -1,12 +1,9 @@
 package gorm
 
 import (
-	"os"
-	"path/filepath"
-
 	"cassette/pkg/repository"
 
-	"gorm.io/driver/sqlite"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
@@ -16,12 +13,8 @@ type Repository struct {
 	db *gorm.DB
 }
 
-func NewSQLite(path string) (*Repository, error) {
-	dir := filepath.Dir(path)
-	os.MkdirAll(dir, 0755)
-
-	db, err := gorm.Open(sqlite.Open(path), &gorm.Config{})
-
+func NewPostgres(dsn string) (*Repository, error) {
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +61,8 @@ func (r *Repository) CreateSession(info *repository.SessionInfo) (*repository.Se
 		Origin:    info.Origin,
 		UserAgent: info.UserAgent,
 		UserEmail: info.UserEmail,
-		QaId: info.QaId,
+		QaId:      info.QaId,
+		QaSessionId: info.QaSessionId,
 	}
 
 	if tx := r.db.Create(&session); tx.Error != nil {
@@ -99,17 +93,14 @@ func convertSessions(sessions []Session) []repository.Session {
 
 func convertSession(session Session) *repository.Session {
 	return &repository.Session{
-		ID: session.ID,
-
-		Created: session.CreatedAt,
-		Updated: session.UpdatedAt,
-
-		Origin:  session.Origin,
-		Address: session.Address,
-
+		ID:        session.ID,
+		Created:   session.CreatedAt,
+		Updated:   session.UpdatedAt,
+		Origin:    session.Origin,
+		Address:   session.Address,
 		UserAgent: session.UserAgent,
-
 		UserEmail: session.UserEmail,
-		QaId: session.QaId,
+		QaId:      session.QaId,
+		QaSessionId: session.QaSessionId,
 	}
 }

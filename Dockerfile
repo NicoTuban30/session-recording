@@ -6,13 +6,14 @@ FROM node:19-alpine AS ui
 RUN npm i -g pnpm
 
 WORKDIR /src/ui
-COPY ui/package.json ui/pnpm-lock.yaml ./
+COPY ui/package.json ui/pnpm-lock.yaml /src/ui/
 
 RUN pnpm install --frozen-lockfile
 
-# Copy the rest of the UI source code
-COPY ui/ .
+WORKDIR /src
+COPY ./ui/ ./ui/
 
+WORKDIR /src/ui
 RUN pnpm run build
 
 
@@ -27,10 +28,14 @@ COPY go.* ./
 RUN go mod download
 
 COPY . .
+
+# Run go mod tidy to ensure all necessary dependencies are included
+RUN go mod tidy
+
 RUN CGO_ENABLED=1 go build -o server cmd/server/main.go
 
 
-## Deployss
+## Deploy
 FROM alpine
 
 RUN apk add --no-cache tini ca-certificates

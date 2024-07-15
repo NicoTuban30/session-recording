@@ -2,27 +2,55 @@ version: '3.9'
 
 services:
   app:
+    image: mentisreplay:latest 
     build:
       context: .
       dockerfile: Dockerfile
     ports:
       - "3000:3000"
+    networks:
+      - mynetwork
     environment:
-      - NODE_ENV=development
-    volumes:
-      - ./data:/data
+      - DATABASE_URL=postgres://myuser:mypassword@postgres:5432/mydb?sslmode=disable
     depends_on:
-      - db
+      - postgres
+    # Uncomment below if you want to use volume mapping
+    # volumes:
+    #   - ./app_data:/app/data
 
-  db:
-    image: postgres:15-alpine
-    restart: always
+  postgres:
+    image: postgres:16
     environment:
-      POSTGRES_DB: mydatabase
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: mypassword
+      POSTGRES_DB: mydb
+    ports:
+      - "5432:5432"
     volumes:
-      - db_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - mynetwork
+
+  nginx:
+    build:
+      context: nginx-reverse-proxy
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - certs:/etc/nginx/certs
+    depends_on:
+      - app
+    networks:
+      - mynetwork
 
 volumes:
-  db_data:
+  certs:
+    driver: local
+  postgres_data:
+    driver: local
+
+networks:
+  mynetwork:
+    driver: bridge

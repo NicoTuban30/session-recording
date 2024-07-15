@@ -1,8 +1,8 @@
-	package repository
+package repository
 
-	import (
-		"time"
-	)
+import (
+	"time"
+)
 
 	type Session struct {
 		ID string `json:"id"`
@@ -17,6 +17,7 @@
 
 		UserEmail string `json:"userEmail"`
 		QaId string `json:"qaId"`
+		QaSessionId string `json:"qaSessionId"`
 	}
 
 	type Repository interface {
@@ -35,5 +36,6 @@
 
 		UserEmail string
 		QaId string
+		QaSessionId string
 
 	}

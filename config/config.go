@@ -4,7 +4,6 @@ import (
 	"cassette/pkg/storage"
 	"cassette/pkg/storage/filesystem"
 	"os"
-	"path/filepath"
 
 	"cassette/pkg/repository"
 	"cassette/pkg/repository/gorm"
@@ -42,8 +41,12 @@ func FromEnvironment() (*Config, error) {
 		return nil, err
 	}
 
-	r, err := gorm.NewSQLite(filepath.Join(path, "db.sqlite3"))
+	dsn := os.Getenv("DATABASE_URL")
+	if dsn == "" {
+		dsn = "host=" + os.Getenv("DB_HOST") + " user=" + os.Getenv("POSTGRES_USER") + " password=" + os.Getenv("POSTGRES_PASSWORD") + " dbname=" + os.Getenv("POSTGRES_DB") + " port=" + os.Getenv("DB_PORT") + " sslmode=disable"
+	}
 
+	r, err := gorm.NewPostgres(dsn)
 	if err != nil {
 		return nil, err
 	}

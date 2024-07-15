@@ -20,6 +20,7 @@ type Session struct {
 	
 	UserEmail string
 	QaId string
+	QaSessionId string
 
 }
 

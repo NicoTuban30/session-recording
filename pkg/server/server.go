@@ -10,10 +10,11 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/rs/cors"
 	"cassette/config"
 	"cassette/pkg/repository"
 	"cassette/pkg/storage"
+
+	"github.com/rs/cors"
 )
 
 const (
@@ -104,7 +105,7 @@ func (s *Server) handleScript(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/javascript")
 
 	var result bytes.Buffer
-
+   
 	result.WriteString(jsRecord)
 	result.WriteString("\n")
 	result.WriteString(jsCassette)
@@ -117,6 +118,7 @@ func (s *Server) handleEvents(w http.ResponseWriter, r *http.Request) {
 		Events []storage.Event `json:"events"`
 		UserEmail string          `json:"userEmail"`
 		QaId string            `json:"qaId"`
+		QaSessionId string            `json:"qaSessionId"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
@@ -139,6 +141,7 @@ func (s *Server) handleEvents(w http.ResponseWriter, r *http.Request) {
 			UserAgent: r.UserAgent(),
 			UserEmail:    body.UserEmail,
 			QaId:      body.QaId,
+			QaSessionId:      body.QaSessionId,
 		}
 
 		session, err = s.Repository.CreateSession(info)

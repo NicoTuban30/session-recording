@@ -9,6 +9,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"strings"
 
 	"cassette/config"
 	"cassette/pkg/repository"
@@ -18,7 +19,7 @@ import (
 )
 
 const (
-	cookieName = "casette-session"
+	cookieName = "cassette-session"
 	webhookURL = "https://mentisnativo.bubbleapps.io/version-test/api/1.1/wf/session-data/initialize"
 )
 
@@ -35,9 +36,11 @@ type Server struct {
 
 	handler    http.Handler
 	filesystem fs.FS
+	Repository repository.Repository // Add repository field
+	Storage    storage.Storage       // Add storage field
 }
 
-func New(config *config.Config) *Server {
+func New(config *config.Config, repo repository.Repository, storage storage.Storage) *Server {
 	mux := http.NewServeMux()
 
 	cors := cors.New(cors.Options{
@@ -50,18 +53,20 @@ func New(config *config.Config) *Server {
 	})
 
 	s := &Server{
-		Config: config,
+		Config:     config,
 		handler:    cors.Handler(mux),
 		filesystem: os.DirFS("./public"),
+		Repository: repo,
+		Storage:    storage,
 	}
 
-	mux.HandleFunc("POST /events", s.handleEvents)
-	mux.HandleFunc("GET /cassette.min.cjs", s.handleScript)
+	mux.HandleFunc("/events", s.handleEvents)
+	mux.HandleFunc("/cassette.min.cjs", s.handleScript)
 
-	mux.HandleFunc("GET /sessions", s.handleAuth(s.handleSessions))
-	mux.HandleFunc("GET /sessions/{session}", s.handleAuth(s.handleSession))
-	mux.HandleFunc("GET /sessions/{session}/events", s.handleAuth(s.handleSessionEvents))
-	mux.HandleFunc("DELETE /sessions/{session}", s.handleAuth(s.handleSessionDelete))
+	mux.HandleFunc("/sessions", s.handleAuth(s.handleSessions))
+	mux.HandleFunc("/sessions/", s.handleAuth(s.handleSession)) // Added trailing slash
+	mux.HandleFunc("/sessions/{session}/events", s.handleAuth(s.handleSessionEvents))
+	mux.HandleFunc("/sessions/{session}/delete", s.handleAuth(s.handleSessionDelete)) // Unique path for delete
 
 	mux.HandleFunc("/", s.handleAuth(s.handleUI))
 
@@ -105,7 +110,7 @@ func (s *Server) handleScript(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/javascript")
 
 	var result bytes.Buffer
-   
+
 	result.WriteString(jsRecord)
 	result.WriteString("\n")
 	result.WriteString(jsCassette)
@@ -115,10 +120,10 @@ func (s *Server) handleScript(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handleEvents(w http.ResponseWriter, r *http.Request) {
 	var body struct {
-		Events []storage.Event `json:"events"`
-		UserEmail string          `json:"userEmail"`
-		QaId string            `json:"qaId"`
-		QaSessionId string            `json:"qaSessionId"`
+		Events      []storage.Event `json:"events"`
+		UserEmail   string          `json:"userEmail"`
+		QaId        string          `json:"qaId"`
+		QaSessionId string          `json:"qaSessionId"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
@@ -129,27 +134,30 @@ func (s *Server) handleEvents(w http.ResponseWriter, r *http.Request) {
 	var err error
 	var session *repository.Session
 
-	if id := getSessionID(r); id != "" {
-		session, err = s.Repository.Session(id)
-	}
-
-	if session == nil {
-		info := &repository.SessionInfo{
-			Origin:  getOrigin(r),
-			Address: getAddress(r),
-
-			UserAgent: r.UserAgent(),
-			UserEmail:    body.UserEmail,
-			QaId:      body.QaId,
-			QaSessionId:      body.QaSessionId,
-		}
-
-		session, err = s.Repository.CreateSession(info)
-	}
-
+	// Check if a session exists for the given qaSessionId
+	sessions, err := s.Repository.FindSessionsByQaSessionId(body.QaSessionId)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
+	}
+
+	if len(sessions) > 0 {
+		session = &sessions[0]
+	} else {
+		info := &repository.SessionInfo{
+			Origin:      getOrigin(r),
+			Address:     getAddress(r),
+			UserAgent:   r.UserAgent(),
+			UserEmail:   body.UserEmail,
+			QaId:        body.QaId,
+			QaSessionId: body.QaSessionId,
+		}
+
+		session, err = s.Repository.CreateSession(info)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 	}
 
 	if err := s.Storage.AppendEvents(session.ID, body.Events...); err != nil {
@@ -159,11 +167,11 @@ func (s *Server) handleEvents(w http.ResponseWriter, r *http.Request) {
 
 	setSessionID(w, r, session.ID)
 
-	
 	if err := s.sendSessionIDToWebhook(session.ID); err != nil {
-		// Log the error but don't fail the request
 		fmt.Printf("Error sending session ID to webhook: %v\n", err)
 	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func (s *Server) sendSessionIDToWebhook(sessionID string) error {
@@ -197,7 +205,7 @@ func (s *Server) handleSessions(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleSession(w http.ResponseWriter, r *http.Request) {
-	id := r.PathValue("session")
+	id := r.URL.Path[len("/sessions/"):]
 	session, err := s.Repository.Session(id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
@@ -208,9 +216,14 @@ func (s *Server) handleSession(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleSessionDelete(w http.ResponseWriter, r *http.Request) {
-	id := r.PathValue("session")
+	id := r.URL.Path[len("/sessions/"):]
 
-	if err := s.Storage.DeleteDelete(id); err != nil {
+	// Extract session ID correctly
+	if idx := strings.Index(id, "/"); idx != -1 {
+		id = id[:idx]
+	}
+
+	if err := s.Storage.DeleteSession(id); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -224,15 +237,14 @@ func (s *Server) handleSessionDelete(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleSessionEvents(w http.ResponseWriter, r *http.Request) {
-	id := r.PathValue("session")
-
-	session, err := s.Repository.Session(id)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusNotFound)
-		return
+	id := r.URL.Path[len("/sessions/"):]
+	
+	// Extract session ID correctly
+	if idx := strings.Index(id, "/"); idx != -1 {
+		id = id[:idx]
 	}
 
-	events, err := s.Storage.Events(session.ID)
+	events, err := s.Storage.Events(id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
@@ -268,11 +280,8 @@ func setSessionID(w http.ResponseWriter, r *http.Request, id string) {
 	http.SetCookie(w, &http.Cookie{
 		Name:  cookieName,
 		Value: id,
-
-		Path: "/",
-
+		Path:  "/",
 		Secure:   r.URL.Scheme == "https",
 		HttpOnly: true,
 	})
 }
-

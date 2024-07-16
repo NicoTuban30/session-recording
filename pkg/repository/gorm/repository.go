@@ -58,10 +58,10 @@ func (r *Repository) CreateSession(info *repository.SessionInfo) (*repository.Se
 	}
 
 	session := Session{
-		Origin:    info.Origin,
-		UserAgent: info.UserAgent,
-		UserEmail: info.UserEmail,
-		QaId:      info.QaId,
+		Origin:      info.Origin,
+		UserAgent:   info.UserAgent,
+		UserEmail:   info.UserEmail,
+		QaId:        info.QaId,
 		QaSessionId: info.QaSessionId,
 	}
 
@@ -80,6 +80,16 @@ func (r *Repository) DeleteSession(id string) error {
 	return nil
 }
 
+func (r *Repository) FindSessionsByQaSessionId(qaSessionId string) ([]repository.Session, error) {
+	var sessions []Session
+
+	if tx := r.db.Where("qa_session_id = ?", qaSessionId).Find(&sessions); tx.Error != nil {
+		return nil, tx.Error
+	}
+
+	return convertSessions(sessions), nil
+}
+
 func convertSessions(sessions []Session) []repository.Session {
 	result := make([]repository.Session, 0)
 
@@ -93,14 +103,14 @@ func convertSessions(sessions []Session) []repository.Session {
 
 func convertSession(session Session) *repository.Session {
 	return &repository.Session{
-		ID:        session.ID,
-		Created:   session.CreatedAt,
-		Updated:   session.UpdatedAt,
-		Origin:    session.Origin,
-		Address:   session.Address,
-		UserAgent: session.UserAgent,
-		UserEmail: session.UserEmail,
-		QaId:      session.QaId,
+		ID:          session.ID,
+		Created:     session.CreatedAt,
+		Updated:     session.UpdatedAt,
+		Origin:      session.Origin,
+		Address:     session.Address,
+		UserAgent:   session.UserAgent,
+		UserEmail:   session.UserEmail,
+		QaId:        session.QaId,
 		QaSessionId: session.QaSessionId,
 	}
 }

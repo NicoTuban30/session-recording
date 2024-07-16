@@ -44,7 +44,7 @@ WORKDIR /
 COPY --from=build /src/server server
 COPY --from=ui /src/ui/dist ./public
 
-EXPOSE 3000
+EXPOSE 3000 5432
 
 ENTRYPOINT ["/sbin/tini", "--"]
 CMD ["/server"]

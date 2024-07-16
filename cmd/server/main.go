@@ -1,7 +1,7 @@
 package main
 
 import (
-	_ "embed"
+	"log"
 	"net/http"
 
 	"cassette/config"
@@ -10,14 +10,15 @@ import (
 
 func main() {
 	cfg, err := config.FromEnvironment()
-
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
-	s := server.New(cfg)
+	// Create the server with the config, repository, and storage
+	s := server.New(cfg, cfg.Repository, cfg.Storage)
 
+	// Start the HTTP server
 	if err := http.ListenAndServe(":3000", s); err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 }

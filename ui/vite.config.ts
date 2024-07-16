@@ -7,7 +7,7 @@ export default defineConfig({
   plugins: [react(), svgr()],
   server: {
     proxy: {
-      '/sessions': 'http://localhost:3000',
+      '/sessions': ':3000',
     },
   },
 });

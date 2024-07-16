@@ -16,12 +16,10 @@ type Session struct {
 	Origin  string
 	Address string
 
-	UserAgent string
-	
-	UserEmail string
-	QaId string
+	UserAgent  string
+	UserEmail  string
+	QaId       string
 	QaSessionId string
-
 }
 
 func (s *Session) BeforeCreate(tx *gorm.DB) (err error) {

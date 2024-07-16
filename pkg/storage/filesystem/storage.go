@@ -79,9 +79,8 @@ func (fs *FileSystem) AppendEvents(session string, events ...storage.Event) erro
 	return nil
 }
 
-func (fs *FileSystem) DeleteDelete(session string) error {
+func (fs *FileSystem) DeleteSession(session string) error {
 	path := filepath.Join(fs.root, session)
 
-	os.Remove(path)
-	return nil
+	return os.Remove(path)
 }

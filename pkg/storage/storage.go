@@ -6,5 +6,5 @@ type Storage interface {
 	Events(session string) ([]Event, error)
 
 	AppendEvents(session string, events ...Event) error
-	DeleteDelete(session string) error
+	DeleteSession(sessionID string) error
 }

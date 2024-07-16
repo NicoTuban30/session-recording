@@ -1,8 +1,5 @@
 let events = [];
 let eventsURL = new URL('/events', document.currentScript.src).href;
-let userEmail = getCurrentUserEmail();
-let qaId = getCurrentQAUniqueId();
-let qaSessionId = getCurrentQASessionId();
 let manualSaveTriggered = false;
 let videoStream; // Global variable to store the video stream
 
@@ -13,23 +10,28 @@ rrweb.record({
 });
 
 function getCurrentUserEmail() {
-  const userEmail = localStorage.getItem('userEmail');
-  return userEmail;
+  return localStorage.getItem('userEmail') || '';
 }
 
 function getCurrentQAUniqueId() {
-  const qaId = localStorage.getItem('qaId');
-  return qaId;
+  return localStorage.getItem('qaId') || '';
 }
 
 function getCurrentQASessionId() {
-  const qaSessionId = localStorage.getItem('qaSessionId');
-  return qaSessionId;
+  return localStorage.getItem('qaSessionId') || '';
 }
 
 function save() {
+  let userEmail = getCurrentUserEmail();
+  let qaId = getCurrentQAUniqueId();
+  let qaSessionId = getCurrentQASessionId();
+
+  if (!qaId || !qaSessionId) {
+    console.warn('Missing userEmail, qaId, or qaSessionId. Events not saved.');
+    return;
+  }
+
   const body = JSON.stringify({ events, userEmail, qaId, qaSessionId });
-  events = [];
 
   fetch(eventsURL, {
     method: 'POST',
@@ -38,6 +40,11 @@ function save() {
       'Content-Type': 'application/json',
     },
     body,
+  }).then(response => {
+    if (!response.ok) {
+      return Promise.reject('Failed to save events');
+    }
+    events = []; // Clear events only after successful POST
   }).catch(error => {
     console.error('Error sending events:', error);
   });
@@ -56,3 +63,5 @@ window.addEventListener('beforeunload', function(event) {
   save();
 });
 
+// Optionally, save events periodically
+setInterval(save, 6000); // Save every 6 seconds

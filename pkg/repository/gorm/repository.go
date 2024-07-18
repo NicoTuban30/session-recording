@@ -58,11 +58,11 @@ func (r *Repository) CreateSession(info *repository.SessionInfo) (*repository.Se
 	}
 
 	session := Session{
-		Origin:      info.Origin,
-		UserAgent:   info.UserAgent,
-		UserEmail:   info.UserEmail,
-		QaId:        info.QaId,
-		QaSessionId: info.QaSessionId,
+		Origin:         info.Origin,
+		UserAgent:      info.UserAgent,
+		UserEmail:      info.UserEmail,
+		QaId:           info.QaId,
+		QaSessionId:    info.QaSessionId,
 		AgoraStreamUrl: info.AgoraStreamUrl,
 	}
 
@@ -89,6 +89,24 @@ func (r *Repository) FindSessionsByQaSessionId(qaSessionId string) ([]repository
 	}
 
 	return convertSessions(sessions), nil
+}
+
+func (r *Repository) UpdateSessionAgoraStreamURL(id string, agoraStreamUrl string) error {
+	// Retrieve the existing session from the database
+	var session Session
+	if err := r.db.First(&session, "id = ?", id).Error; err != nil {
+		return err
+	}
+
+	// Update only the AgoraStreamUrl field
+	session.AgoraStreamUrl = agoraStreamUrl
+
+	// Save the updated session back to the database
+	if err := r.db.Save(&session).Error; err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func convertSessions(sessions []Session) []repository.Session {

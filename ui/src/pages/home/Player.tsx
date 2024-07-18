@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import SelectIcon from '../../assets/undraw_select.svg?react';
-
 import { playerMetaData } from '@rrweb/types';
 import { Calendar, TimerIcon, Trash2Icon } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
@@ -15,27 +14,21 @@ import { SessionIcons } from './SessionIcons';
 
 export default function Player() {
   const [searchParams, setSearchParams] = useSearchParams();
-
   const playerRef = useRef<rrwebPlayer | null>(null);
   const playerContainerRef = useRef<HTMLDivElement | null>(null);
-
   const currentSessionId = searchParams.get('id');
   const [metadata, setMetadata] = useState<playerMetaData>();
-
   const { data: sessions } = useSessions();
-
   const { data: events, isPending } = useEvents({ id: currentSessionId });
   const { mutate } = useDeleteSession();
 
   useEffect(() => {
     if (events && events.length > 2 && playerContainerRef.current) {
       const player = playerRef.current?.getReplayer();
-
       if (player) {
         player.destroy();
         playerContainerRef.current.innerHTML = '';
       }
-
       playerRef.current = new rrwebPlayer({
         target: document.getElementById('player-container')!,
         props: {
@@ -43,7 +36,6 @@ export default function Player() {
           width: playerContainerRef.current.clientWidth,
         },
       });
-
       setMetadata(playerRef.current.getMetaData());
     }
   }, [playerContainerRef.current, events]);
@@ -114,6 +106,20 @@ export default function Player() {
           <Trash2Icon className="h-4 w-4" />
         </div>
       </div>
+
+      {/* Embed the video player if agoraStreamUrl is available */}
+      {session?.agoraStreamUrl && (
+        <div className="my-4">
+          <video
+            src={session.agoraStreamUrl}
+            controls
+            width="100px"
+            height="100px"
+            className="rounded-md shadow-md"
+          />
+        </div>
+      )}
+
       <div id="player-container" ref={playerContainerRef} className="[&_.rr-player]:shadow-none" />
     </PlayerWrapper>
   );

@@ -25,10 +25,13 @@ type Repository interface {
 	Session(id string) (*Session, error)
 
 	CreateSession(info *SessionInfo) (*Session, error)
+	UpdateSessionAgoraStreamURL(id string, agoraStreamUrl string) error
 	DeleteSession(id string) error
 
 	FindSessionsByQaSessionId(qaSessionId string) ([]Session, error)
 }
+
+
 
 type SessionInfo struct {
 	Origin  string

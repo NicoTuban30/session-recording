@@ -13,10 +13,11 @@ type Session struct {
 	Origin  string `json:"origin"`
 	Address string `json:"address"`
 
-	UserAgent  string `json:"userAgent"`
-	UserEmail  string `json:"userEmail"`
-	QaId       string `json:"qaId"`
-	QaSessionId string `json:"qaSessionId"`
+	UserAgent      string `json:"userAgent"`
+	UserEmail      string `json:"userEmail"`
+	QaId           string `json:"qaId"`
+	QaSessionId    string `json:"qaSessionId"`
+	AgoraStreamUrl string `json:"agoraStreamUrl"`
 }
 
 type Repository interface {
@@ -37,4 +38,5 @@ type SessionInfo struct {
 	UserEmail  string
 	QaId       string
 	QaSessionId string
+	AgoraStreamUrl string
 }

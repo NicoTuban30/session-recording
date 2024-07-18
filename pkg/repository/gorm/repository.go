@@ -63,6 +63,7 @@ func (r *Repository) CreateSession(info *repository.SessionInfo) (*repository.Se
 		UserEmail:   info.UserEmail,
 		QaId:        info.QaId,
 		QaSessionId: info.QaSessionId,
+		AgoraStreamUrl: info.AgoraStreamUrl,
 	}
 
 	if tx := r.db.Create(&session); tx.Error != nil {
@@ -112,5 +113,6 @@ func convertSession(session Session) *repository.Session {
 		UserEmail:   session.UserEmail,
 		QaId:        session.QaId,
 		QaSessionId: session.QaSessionId,
+		AgoraStreamUrl: session.AgoraStreamUrl,
 	}
 }

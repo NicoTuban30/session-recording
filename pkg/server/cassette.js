@@ -1,7 +1,6 @@
 let events = [];
 let eventsURL = new URL('/events', document.currentScript.src).href;
 let manualSaveTriggered = false;
-let videoStream; // Global variable to store the video stream
 
 rrweb.record({
   emit(event) {
@@ -21,17 +20,28 @@ function getCurrentQASessionId() {
   return localStorage.getItem('qaSessionId') || '';
 }
 
+function getCurrentAgoraStreamUrl() {
+  return localStorage.getItem('agoraStreamUrl') || '';
+}
+
 function save() {
   let userEmail = getCurrentUserEmail();
   let qaId = getCurrentQAUniqueId();
   let qaSessionId = getCurrentQASessionId();
+  let agoraStreamUrl = getCurrentAgoraStreamUrl();
 
   if (!qaId || !qaSessionId) {
     console.warn('Missing userEmail, qaId, or qaSessionId. Events not saved.');
     return;
   }
 
-  const body = JSON.stringify({ events, userEmail, qaId, qaSessionId });
+  const body = JSON.stringify({
+    events,
+    userEmail,
+    qaId,
+    qaSessionId,
+    agoraStreamUrl // Include the Agora stream URL
+  });
 
   fetch(eventsURL, {
     method: 'POST',

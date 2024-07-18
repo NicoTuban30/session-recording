@@ -120,10 +120,11 @@ func (s *Server) handleScript(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handleEvents(w http.ResponseWriter, r *http.Request) {
 	var body struct {
-		Events      []storage.Event `json:"events"`
-		UserEmail   string          `json:"userEmail"`
-		QaId        string          `json:"qaId"`
-		QaSessionId string          `json:"qaSessionId"`
+		Events         []storage.Event `json:"events"`
+		UserEmail      string          `json:"userEmail"`
+		QaId           string          `json:"qaId"`
+		QaSessionId    string          `json:"qaSessionId"`
+		AgoraStreamUrl string          `json:"agoraStreamUrl"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
@@ -151,6 +152,7 @@ func (s *Server) handleEvents(w http.ResponseWriter, r *http.Request) {
 			UserEmail:   body.UserEmail,
 			QaId:        body.QaId,
 			QaSessionId: body.QaSessionId,
+			AgoraStreamUrl: body.AgoraStreamUrl,
 		}
 
 		session, err = s.Repository.CreateSession(info)

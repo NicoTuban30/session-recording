@@ -31,19 +31,7 @@ services:
     networks:
       - mynetwork
 
-  nginx:
-    build:
-      context: nginx-reverse-proxy
-      dockerfile: Dockerfile
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - certs:/etc/nginx/certs
-    depends_on:
-      - app
-    networks:
-      - mynetwork
+
 
 volumes:
   certs:

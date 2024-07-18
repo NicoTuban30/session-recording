@@ -62,6 +62,7 @@ func New(config *config.Config, repo repository.Repository, storage storage.Stor
 
 	mux.HandleFunc("/events", s.handleEvents)
 	mux.HandleFunc("/cassette.min.cjs", s.handleScript)
+	mux.HandleFunc("/agoraStream", s.handleAgoraStreamUrl) // New endpoint for Agora stream
 
 	mux.HandleFunc("/sessions", s.handleAuth(s.handleSessions))
 	mux.HandleFunc("/sessions/", s.handleAuth(s.handleSession)) // Added trailing slash
@@ -146,12 +147,12 @@ func (s *Server) handleEvents(w http.ResponseWriter, r *http.Request) {
 		session = &sessions[0]
 	} else {
 		info := &repository.SessionInfo{
-			Origin:      getOrigin(r),
-			Address:     getAddress(r),
-			UserAgent:   r.UserAgent(),
-			UserEmail:   body.UserEmail,
-			QaId:        body.QaId,
-			QaSessionId: body.QaSessionId,
+			Origin:         getOrigin(r),
+			Address:        getAddress(r),
+			UserAgent:      r.UserAgent(),
+			UserEmail:      body.UserEmail,
+			QaId:           body.QaId,
+			QaSessionId:    body.QaSessionId,
 			AgoraStreamUrl: body.AgoraStreamUrl,
 		}
 
@@ -171,6 +172,38 @@ func (s *Server) handleEvents(w http.ResponseWriter, r *http.Request) {
 
 	if err := s.sendSessionIDToWebhook(session.ID); err != nil {
 		fmt.Printf("Error sending session ID to webhook: %v\n", err)
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (s *Server) handleAgoraStreamUrl(w http.ResponseWriter, r *http.Request) {
+	var body struct {
+		AgoraStreamUrl string `json:"agoraStreamUrl"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	sessionID := getSessionID(r)
+	if sessionID == "" {
+		http.Error(w, "Missing session ID", http.StatusBadRequest)
+		return
+	}
+
+	session, err := s.Repository.Session(sessionID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+
+	session.AgoraStreamUrl = body.AgoraStreamUrl
+
+	if err := s.Repository.UpdateSession(session); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	w.WriteHeader(http.StatusNoContent)
@@ -240,7 +273,7 @@ func (s *Server) handleSessionDelete(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handleSessionEvents(w http.ResponseWriter, r *http.Request) {
 	id := r.URL.Path[len("/sessions/"):]
-	
+
 	// Extract session ID correctly
 	if idx := strings.Index(id, "/"); idx != -1 {
 		id = id[:idx]

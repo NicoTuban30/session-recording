@@ -1,12 +1,55 @@
 let events = [];
 let eventsURL = new URL('/events', document.currentScript.src).href;
 let manualSaveTriggered = false;
+let mediaRecorder;
+let recordedBlobs;
 
 rrweb.record({
   emit(event) {
     events.push(event);
   },
 });
+
+async function init() {
+  const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+  document.querySelector('#preview').srcObject = stream;
+  window.stream = stream;
+  startRecording();  // Start recording automatically
+}
+
+function startRecording() {
+  recordedBlobs = [];
+  const options = { mimeType: 'video/webm;codecs=vp9' };
+  mediaRecorder = new MediaRecorder(window.stream, options);
+  mediaRecorder.ondataavailable = handleDataAvailable;
+  mediaRecorder.start();
+}
+
+function stopRecording() {
+  mediaRecorder.stop();
+  const superBuffer = new Blob(recordedBlobs, { type: 'video/webm' });
+  document.querySelector('#recorded').src = window.URL.createObjectURL(superBuffer);
+
+  const formData = new FormData();
+  formData.append('session', getCurrentQASessionId());
+  formData.append('video', superBuffer, 'video.webm');
+
+  fetch('/upload', {
+    method: 'POST',
+    body: formData
+  });
+}
+
+function handleDataAvailable(event) {
+  if (event.data && event.data.size > 0) {
+    recordedBlobs.push(event.data);
+  }
+}
+
+document.querySelector('#start').addEventListener('click', startRecording);
+document.querySelector('#stop').addEventListener('click', stopRecording);
+
+init();
 
 function getCurrentUserEmail() {
   return localStorage.getItem('userEmail') || '';
@@ -40,7 +83,7 @@ function save() {
     userEmail,
     qaId,
     qaSessionId,
-    agoraStreamUrl // Include the Agora stream URL
+    agoraStreamUrl
   });
 
   fetch(eventsURL, {
@@ -54,24 +97,20 @@ function save() {
     if (!response.ok) {
       return Promise.reject('Failed to save events');
     }
-    events = []; // Clear events only after successful POST
+    events = [];
   }).catch(error => {
     console.error('Error sending events:', error);
   });
 
-  // If save is triggered manually, set the flag to true
   manualSaveTriggered = true;
 }
 
 window.addEventListener('beforeunload', function(event) {
-  // If manualSaveTriggered is true, prevent the beforeunload event
   if (manualSaveTriggered) {
-    manualSaveTriggered = false; // Reset the flag for future unload events
+    manualSaveTriggered = false;
     return;
   }
-
   save();
 });
 
-// Optionally, save events periodically
-setInterval(save, 6000); // Save every 6 seconds
+setInterval(save, 6000);

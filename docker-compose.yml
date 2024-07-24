@@ -14,9 +14,8 @@ services:
       - DATABASE_URL=postgres://myuser:mypassword@postgres:5432/mydb?sslmode=disable
     depends_on:
       - postgres
-    # Uncomment below if you want to use volume mapping
-    # volumes:
-    #   - ./app_data:/app/data
+    volumes:
+      - ./sessions:/sessions
 
   postgres:
     image: postgres:16

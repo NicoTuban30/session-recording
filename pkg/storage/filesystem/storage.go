@@ -3,6 +3,7 @@ package filesystem
 import (
 	"encoding/json"
 	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -82,5 +83,25 @@ func (fs *FileSystem) AppendEvents(session string, events ...storage.Event) erro
 func (fs *FileSystem) DeleteSession(session string) error {
 	path := filepath.Join(fs.root, session)
 
-	return os.Remove(path)
+	if err := os.Remove(path); err != nil {
+		return err
+	}
+
+	videoPath := filepath.Join(fs.root, session+".webm")
+
+	return os.Remove(videoPath)
+}
+
+// SaveVideo saves a video file for a given session
+func (fs *FileSystem) SaveVideo(session string, videoData []byte) error {
+	path := filepath.Join(fs.root, session+".webm")
+
+	return ioutil.WriteFile(path, videoData, 0600)
+}
+
+// GetVideo retrieves the video file for a given session
+func (fs *FileSystem) GetVideo(session string) ([]byte, error) {
+	path := filepath.Join(fs.root, session+".webm")
+
+	return ioutil.ReadFile(path)
 }

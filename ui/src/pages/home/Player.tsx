@@ -109,17 +109,19 @@ export default function Player() {
       </div>
 
       <div className="overlay-container">
+        <div id="player-container" ref={playerContainerRef} className="rr-player-container" />
         {session?.agoraStreamUrl && (
           <div className="video-wrapper">
             <video
               src={session.agoraStreamUrl}
               controls
+              autoPlay
               className="video-player"
             />
           </div>
         )}
-        <div id="player-container" ref={playerContainerRef} className="rr-player-container" />
       </div>
+      
     </PlayerWrapper>
   );
 }

@@ -62,9 +62,7 @@ func New(config *config.Config, repo repository.Repository, storage storage.Stor
 
         mux.HandleFunc("/events", s.handleEvents)
         mux.HandleFunc("/cassette.min.cjs", s.handleScript)
-		mux.HandleFunc("/agoraStream/{session}", s.handleAgoraStreamUrl)
-
-
+        mux.HandleFunc("/agoraStream/{session}", s.handleAgoraStreamUrl)
         mux.HandleFunc("/sessions", s.handleAuth(s.handleSessions))
         mux.HandleFunc("/sessions/", s.handleAuth(s.handleSession)) // Added trailing slash
         mux.HandleFunc("/sessions/{session}/events", s.handleAuth(s.handleSessionEvents))
@@ -126,7 +124,7 @@ func (s *Server) handleEvents(w http.ResponseWriter, r *http.Request) {
                 UserEmail   string          `json:"userEmail"`
                 QaId        string          `json:"qaId"`
                 QaSessionId string          `json:"qaSessionId"`
-				AgoraStreamUrl string       `json:"agoraStreamUrl"`
+                AgoraStreamUrl string       `json:"agoraStreamUrl"`
         }
 
         if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
@@ -154,7 +152,7 @@ func (s *Server) handleEvents(w http.ResponseWriter, r *http.Request) {
                         UserEmail:   body.UserEmail,
                         QaId:        body.QaId,
                         QaSessionId: body.QaSessionId,
-						AgoraStreamUrl: body.AgoraStreamUrl,
+                        AgoraStreamUrl: body.AgoraStreamUrl,
                 }
 
                 session, err = s.Repository.CreateSession(info)
@@ -177,6 +175,7 @@ func (s *Server) handleEvents(w http.ResponseWriter, r *http.Request) {
 
         w.WriteHeader(http.StatusNoContent)
 }
+
 
 func (s *Server) handleAgoraStreamUrl(w http.ResponseWriter, r *http.Request) {
     // Extract session ID from URL path
@@ -316,8 +315,6 @@ func getSessionID(r *http.Request) string {
         }
         return ""
 }
-
-
 
 func setSessionID(w http.ResponseWriter, r *http.Request, id string) {
         http.SetCookie(w, &http.Cookie{

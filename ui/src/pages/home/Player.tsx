@@ -11,6 +11,7 @@ import useEvents from '../../hooks/useEvents';
 import useSessions from '../../hooks/useSessions';
 import { formatDate, formatTime, getFormatedTimeDiff } from '../../utils';
 import { SessionIcons } from './SessionIcons';
+import './Player.css'; 
 
 export default function Player() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -107,20 +108,18 @@ export default function Player() {
         </div>
       </div>
 
-      {/* Embed the video player if agoraStreamUrl is available */}
-      {session?.agoraStreamUrl && (
-        <div className="my-4">
-          <video
-            src={session.agoraStreamUrl}
-            controls
-            width="100px"
-            height="100px"
-            className="rounded-md shadow-md"
-          />
-        </div>
-      )}
-
-      <div id="player-container" ref={playerContainerRef} className="[&_.rr-player]:shadow-none" />
+      <div className="overlay-container">
+        {session?.agoraStreamUrl && (
+          <div className="video-wrapper">
+            <video
+              src={session.agoraStreamUrl}
+              controls
+              className="video-player"
+            />
+          </div>
+        )}
+        <div id="player-container" ref={playerContainerRef} className="rr-player-container" />
+      </div>
     </PlayerWrapper>
   );
 }

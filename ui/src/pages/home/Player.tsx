@@ -38,6 +38,8 @@ export default function Player() {
         },
       });
       setMetadata(playerRef.current.getMetaData());
+
+      playerRef.current.toggleSkipInactive();
     }
   }, [playerContainerRef.current, events]);
 

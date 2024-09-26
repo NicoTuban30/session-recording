@@ -2,6 +2,7 @@ import { useSearchParams } from 'react-router-dom';
 import { Session } from '../../hooks/useSessions';
 import { cn, formatTime } from '../../utils';
 import { SessionIcons } from './SessionIcons';
+import 'rrweb-player/dist/style.css';
 
 interface ListProps {
   sessions: Session[];
